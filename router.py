@@ -206,6 +206,37 @@ def get_response(message, name, location, problem):
     return response.json()["result"]
 
 
+
+class APIDoctorRequest(BaseModel):
+    search: str
+
+def decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError
+
+@app.post("/api/doctors")
+async def get_doctors(request: APIDoctorRequest):
+    try:
+        connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="patient_information"
+        )
+        cursor = connection.cursor(dictionary=True)
+        query = ("SELECT 医生姓名 as name, 职称 as position, 科室 as department, 医院 as hospital, 评分 as rating, 患者数 as patientCount, 擅长 as specialty, 挂号费 as registrationFee, 门诊费 as consultationFee, 医生主页 as url FROM doctors WHERE 擅长 LIKE %s")
+        cursor.execute(query, (f"%{request.search}%",))
+        doctors = cursor.fetchall()
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+    return JSONResponse(content=json.loads(json.dumps(doctors, default=decimal_default)))
+
 def get_access_token():
     url = "https://aip.baidubce.com/oauth/2.0/token"
     params = {"grant_type": "client_credentials", "client_id": API_KEY, "client_secret": SECRET_KEY}
