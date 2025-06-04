@@ -2,12 +2,23 @@
   <div class="not-found">
     <img src="../assets/404.gif" alt="404 Not Found" @click="goHome">
     <button class="overlay-button" @click="goHome">返回首页</button>
+
+    <!-- 智能交互组件 -->
+    <GestureControl
+      @navigationGesture="handleNavigationGesture"
+    />
+    <VoiceInteraction
+      @voiceCommand="handleVoiceCommand"
+      @voiceResponse="handleVoiceResponse"
+    />
   </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router';
 import { useLoginStore } from '@/stores/login';
+import GestureControl from '@/components/GestureControl.vue';
+import VoiceInteraction from '@/components/VoiceInteraction.vue';
 const router = useRouter();
 const loginStore = useLoginStore();
 
@@ -18,9 +29,39 @@ const goHome = () => {
     if(loginStore.person125Info.role=='user'){
     router.push('/personal');
       }else if(loginStore.person125Info.role=='admin'){
-        router.push('/guanli/controluser');
+        router.push('/health-analytics');
       }
   }
+};
+
+// 处理导航手势
+const handleNavigationGesture = (action) => {
+  switch (action) {
+    case 'confirm_action':
+    case 'scroll_top':
+      goHome();
+      break;
+    case 'zoom_in':
+      document.body.style.zoom = (parseFloat(document.body.style.zoom || 1) + 0.1).toString();
+      break;
+    case 'zoom_out':
+      document.body.style.zoom = Math.max(0.5, parseFloat(document.body.style.zoom || 1) - 0.1).toString();
+      break;
+  }
+};
+
+// 处理语音命令
+const handleVoiceCommand = (command) => {
+  if (command.type === 'navigation') {
+    if (command.action === '首页' || command.action === '主页' || command.action === '返回首页') {
+      goHome();
+    }
+  }
+};
+
+// 处理语音回复
+const handleVoiceResponse = (response) => {
+  console.log('语音回复:', response);
 };
 </script>
 

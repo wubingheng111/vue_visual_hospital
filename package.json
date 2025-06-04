@@ -9,10 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/control_utils": "^0.6.1675466023",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/hands": "^0.4.1675469240",
     "axios": "^1.6.8",
     "echarts": "^4.9.0",
     "echarts-gl": "^1.1.2",
     "element-plus": "^2.7.2",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12",
     "moment": "^2.30.1",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",

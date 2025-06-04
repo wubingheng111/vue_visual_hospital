@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流式输出性能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .output-area {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 200px;
+            margin: 10px 0;
+            border: 1px solid #555;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        .performance-info {
+            background: #444;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>智能问诊流式输出性能测试</h1>
+    
+    <div class="test-container">
+        <h2>测试说明</h2>
+        <p>这个页面用于测试不同流式输出模式的性能表现：</p>
+        <ul>
+            <li><strong>瞬时模式 (⚡)</strong>: 立即显示全部内容，无动画</li>
+            <li><strong>快速模式 (🚀)</strong>: 8个分块快速显示</li>
+            <li><strong>正常模式 (📝)</strong>: 优化的DOM操作，平衡性能和体验</li>
+            <li><strong>慢速模式 (🐌)</strong>: 按句子分割显示</li>
+        </ul>
+    </div>
+
+    <div class="test-container">
+        <h2>性能测试</h2>
+        <div class="controls">
+            <button onclick="testMode('instant')">⚡ 瞬时模式</button>
+            <button onclick="testMode('fast')">🚀 快速模式</button>
+            <button onclick="testMode('normal')">📝 正常模式</button>
+            <button onclick="testMode('slow')">🐌 慢速模式</button>
+            <button onclick="clearOutput()">清空</button>
+        </div>
+        
+        <div class="output-area" id="outputArea"></div>
+        <div class="performance-info" id="performanceInfo">
+            点击上方按钮开始测试...
+        </div>
+    </div>
+
+    <script>
+        const testText = `# AI医生诊断报告
+
+## 症状分析
+根据您描述的症状，我进行了以下分析：
+
+### 主要症状
+1. **头痛** - 可能与压力、睡眠不足或血压有关
+2. **发热** - 体温升高，可能存在感染
+3. **咳嗽** - 呼吸道症状，需要进一步检查
+
+### 建议检查项目
+- 血常规检查
+- 胸部X光片
+- 血压测量
+- 体温监测
+
+### 用药建议
+**注意：以下建议仅供参考，请遵医嘱用药**
+
+1. **退热药物**：如有发热超过38.5°C，可服用对乙酰氨基酚
+2. **止咳药物**：可使用蜂蜜柠檬茶缓解咳嗽
+3. **多休息**：保证充足睡眠，避免过度劳累
+
+### 注意事项
+- 如症状持续加重，请及时就医
+- 保持充足水分摄入
+- 避免接触他人，防止传染
+
+### 复诊建议
+建议3-5天后复诊，如有以下情况请立即就医：
+- 高热不退（超过39°C）
+- 呼吸困难
+- 胸痛加重
+- 意识模糊
+
+**祝您早日康复！**`;
+
+        let currentMode = 'normal';
+        
+        async function testMode(mode) {
+            currentMode = mode;
+            const outputArea = document.getElementById('outputArea');
+            const performanceInfo = document.getElementById('performanceInfo');
+            
+            outputArea.innerHTML = '';
+            performanceInfo.textContent = `正在测试 ${getModeText(mode)} 模式...`;
+            
+            const startTime = performance.now();
+            
+            switch (mode) {
+                case 'instant':
+                    await instantMode(testText, outputArea);
+                    break;
+                case 'fast':
+                    await fastMode(testText, outputArea);
+                    break;
+                case 'normal':
+                    await normalMode(testText, outputArea);
+                    break;
+                case 'slow':
+                    await slowMode(testText, outputArea);
+                    break;
+            }
+            
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+            
+            performanceInfo.innerHTML = `
+                <strong>${getModeText(mode)} 模式测试完成</strong><br>
+                总耗时: ${duration}ms<br>
+                文本长度: ${testText.length} 字符<br>
+                平均速度: ${(testText.length / (duration / 1000)).toFixed(0)} 字符/秒
+            `;
+        }
+        
+        function getModeText(mode) {
+            const modeNames = {
+                instant: '⚡ 瞬时显示',
+                fast: '🚀 快速显示',
+                normal: '📝 正常速度',
+                slow: '🐌 慢速显示'
+            };
+            return modeNames[mode] || '未知模式';
+        }
+        
+        async function instantMode(text, container) {
+            container.innerHTML = formatMarkdown(text);
+        }
+        
+        async function fastMode(text, container) {
+            const chunkCount = 8;
+            const chunkSize = Math.ceil(text.length / chunkCount);
+            
+            for (let i = 0; i < chunkCount; i++) {
+                const end = Math.min((i + 1) * chunkSize, text.length);
+                const currentText = text.slice(0, end);
+                
+                if (i === chunkCount - 1) {
+                    container.innerHTML = formatMarkdown(currentText);
+                } else {
+                    container.textContent = currentText;
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+        }
+        
+        async function normalMode(text, container) {
+            const totalLength = text.length;
+            const chunkSize = Math.max(30, Math.floor(totalLength / 15));
+            const updateInterval = 80;
+            let currentIndex = 0;
+            
+            return new Promise(resolve => {
+                const performUpdate = () => {
+                    if (currentIndex >= totalLength) {
+                        container.innerHTML = formatMarkdown(text);
+                        resolve();
+                        return;
+                    }
+                    
+                    const nextIndex = Math.min(currentIndex + chunkSize, totalLength);
+                    const currentText = text.slice(0, nextIndex);
+                    
+                    if (isGoodBreakPoint(text, nextIndex) || nextIndex === totalLength) {
+                        container.innerHTML = formatMarkdown(currentText);
+                    } else {
+                        container.textContent = currentText;
+                    }
+                    
+                    currentIndex = nextIndex;
+                    setTimeout(performUpdate, updateInterval);
+                };
+                
+                performUpdate();
+            });
+        }
+        
+        async function slowMode(text, container) {
+            const sentences = text.split(/([。！？\n])/);
+            let currentText = '';
+            
+            for (let i = 0; i < sentences.length; i += 2) {
+                const sentence = sentences[i] || '';
+                const punctuation = sentences[i + 1] || '';
+                currentText += sentence + punctuation;
+                
+                container.textContent = currentText;
+                
+                if (i < sentences.length - 2) {
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            }
+            
+            container.innerHTML = formatMarkdown(text);
+        }
+        
+        function isGoodBreakPoint(text, index) {
+            if (index >= text.length) return true;
+            
+            const char = text[index - 1];
+            const nextChar = text[index];
+            
+            return char === '。' || char === '？' || char === '！' || char === '\n' ||
+                   (char === '，' && nextChar === ' ') ||
+                   (char === ' ' && /[A-Z]/.test(nextChar));
+        }
+        
+        function formatMarkdown(text) {
+            // 简化的Markdown渲染
+            return text
+                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^- (.*$)/gm, '<li>$1</li>')
+                .replace(/^(\d+)\. (.*$)/gm, '<li>$1. $2</li>')
+                .replace(/\n/g, '<br>');
+        }
+        
+        function clearOutput() {
+            document.getElementById('outputArea').innerHTML = '';
+            document.getElementById('performanceInfo').textContent = '输出已清空';
+        }
+    </script>
+</body>
+</html>

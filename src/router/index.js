@@ -15,8 +15,18 @@ const router = createRouter({
     },
     {
       path: '/login',
-      name: 'home',
+      name: 'login',
       component: HomeView
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('../views/RegisterView.vue')
+    },
+    {
+      path: '/noquan',
+      name: 'noquan',
+      component: () => import('../views/NoQuan.vue')
     },
     {
       path: '/personal',
@@ -34,9 +44,14 @@ const router = createRouter({
       component: QuaryDoctor
     },
     {
-      path: '/newsdetail/:nid?',
-      name: 'newsdetail',
-      component: () => import('../views/NewsDetail.vue')
+      path: '/intelligent-consultation',
+      name: 'intelligent-consultation',
+      component: () => import('../views/NewsView.vue')
+    },
+    {
+      path: '/health-analytics',
+      name: 'hospital-navigation',
+      component: () => import('../views/HealthAnalytics.vue')
     },
     {
       path: '/guanli',
@@ -63,7 +78,7 @@ const router = createRouter({
           name: 'manageself',
           component: () => import('../views/manage/ManageSelf.vue')
       },
-      
+
       ]
     },
 
@@ -71,37 +86,28 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next) => {
   const loginStore = useLoginStore();
-  const isLoggedIn = true; // 是否登录
-  const userRole = loginStore.person125Info.role; // 用户角色
+  // 检查用户是否真正登录（基于store中的state字段）
+  const isLoggedIn = loginStore.person125Info.state;
 
   // 打印当前导航信息
   console.log(`导航到路径: ${to.path}`);
   console.log(`用户登录状态: ${isLoggedIn}`);
-  console.log(`用户角色: ${userRole}`);
 
-  // 用户未登录，允许访问的公共页面路径
-  const publicPaths = ['/login', '/news', '/newsdetail', '/'];
+  // 游客允许访问的公共页面路径（只有可视化大屏、登录和注册）
+  const publicPaths = ['/login', '/register', '/'];
 
   if (!isLoggedIn) {
-    if (publicPaths.includes(to.path) || to.path.startsWith('/newsdetail')) {
-      console.log("未登录，允许访问公共页面");
+    if (publicPaths.includes(to.path)) {
+      console.log("游客访问公共页面");
       next(); // 允许访问公共页面
     } else {
-      console.log("未登录，重定向到登录页面");
+      console.log("游客尝试访问受限页面，重定向到登录页面");
       next('/login'); // 未登录时跳转到登录页面
     }
   } else {
-    // 用户已登录，根据角色判断访问权限
-    if (userRole === 'user' && to.path.startsWith('/guanli')) {
-      console.log("普通用户尝试访问管理页面，无权限，重定向到无权限页面");
-      next('/noquan'); // 普通用户访问管理页面时，重定向到无权限页面
-    } else if (userRole === 'admin' && to.path === '/personal') {
-      console.log("管理员尝试访问个人信息页面，无权限，重定向到无权限页面");
-      next('/noquan'); // 管理员访问用户页面时，跳转到无权限页面
-    } else {
-      console.log("正常访问页面");
-      next(); // 其他情况正常访问
-    }
+    // 用户已登录，可以访问所有页面
+    console.log("已登录用户，允许访问所有页面");
+    next(); // 登录用户可以访问所有页面
   }
 });
 

@@ -5,6 +5,63 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>医慧之翼——线上综合医疗服务中心</title>
+    <!-- 高德地图API -->
+    <script type="text/javascript">
+      // 高德地图API加载完成回调
+      window.initAmapAPI = function() {
+        console.log('高德地图API加载完成')
+        window.amapReady = true
+        // 触发自定义事件通知地图可以初始化了
+        window.dispatchEvent(new Event('amapReady'))
+      }
+
+      // 动态加载高德地图API
+      window.loadAmapAPI = function() {
+        return new Promise((resolve, reject) => {
+          // 检查是否已经加载
+          if (window.AMap) {
+            window.amapReady = true
+            resolve()
+            return
+          }
+
+          console.log('开始加载高德地图API...')
+
+          const script = document.createElement('script')
+          script.type = 'text/javascript'
+          script.src = 'https://webapi.amap.com/maps?v=1.4.15&key=1d064b3bc45a733c6b39466111c1c6ea&plugin=AMap.Geocoder,AMap.Driving,AMap.Geolocation&callback=initAmapAPI'
+
+          script.onload = () => {
+            console.log('高德地图API脚本加载完成')
+          }
+
+          script.onerror = (error) => {
+            console.error('高德地图API脚本加载失败:', error)
+            reject(new Error('高德地图API脚本加载失败'))
+          }
+
+          document.head.appendChild(script)
+
+          // 监听API加载完成事件
+          const handleMapReady = () => {
+            window.removeEventListener('amapReady', handleMapReady)
+            resolve()
+          }
+
+          window.addEventListener('amapReady', handleMapReady)
+
+          // 设置超时
+          setTimeout(() => {
+            window.removeEventListener('amapReady', handleMapReady)
+            if (window.AMap) {
+              resolve()
+            } else {
+              reject(new Error('高德地图API加载超时'))
+            }
+          }, 15000) // 15秒超时
+        })
+      }
+    </script>
     <style>
       body {
         background-color: #f0f2f5; /* 设置背景颜色 */
@@ -22,4 +79,3 @@
   </body>
 </html>
 
- 

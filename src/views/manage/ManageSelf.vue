@@ -1,5 +1,5 @@
   <template>
-      <div class="parent">  
+      <div class="parent">
         <div class="header">
           <h2>个人信息</h2>
         </div>
@@ -40,7 +40,7 @@
         <div class="button-container">
           <button @click="handleEdit()">编辑</button>
         </div>
-    
+
         <el-dialog
           v-model="editDialogVisible"
           title="修改个人信息"
@@ -76,10 +76,10 @@
     import axios from 'axios';
     const router = useRouter();
     const loginStore = useLoginStore();
-    const url = "http://localhost:3000/"+loginStore.person125Info.role+"/"+ loginStore.person125Info.id;
+    const url = "http://127.0.0.1:8000/api/user/"+loginStore.person125Info.role+"/"+ loginStore.person125Info.id;
     const person = reactive({ info: {} });
     let editDialogVisible = ref(false);
-    
+
     const editForm = reactive({
       id: null,
       name:'',
@@ -90,11 +90,11 @@
       gender:'',
       role:''
     });
-    
+
     onMounted(() => {
       fetchData();
     });
-    
+
     const fetchData = () => {
       axios.get(url).then((response) => {
       person.info = response.data;
@@ -116,13 +116,13 @@
       console.log(editForm);
       editDialogVisible.value = true; // 设置为 true 以显示编辑对话框
     };
-    
+
     const closeEditDialog = () => {
       editDialogVisible.value = false; // 关闭编辑对话框
     };
-    
+
     const saveEdit = () => {
-      axios.put("http://localhost:3000/"+loginStore.person125Info.role+"/"+loginStore.person125Info.id, {
+      axios.put("http://127.0.0.1:8000/api/user/"+loginStore.person125Info.role+"/"+loginStore.person125Info.id, {
         role:loginStore.person125Info.role,
         id:loginStore.person125Info.id,
         name:editForm.name,
@@ -142,9 +142,9 @@
         console.error('编辑失败:', error);
       });
     };
-    
+
     </script>
-    
+
     <style>
       .parent {
         max-width: 600px;
@@ -154,16 +154,16 @@
         border-radius: 10px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 阴影效果 */
       }
-    
+
       .header {
         text-align: center;
         margin-bottom: 20px;
       }
-    
+
       .info-container {
         margin-bottom: 20px;
       }
-    
+
       .info-table {
         width: 100%;
         border-collapse: collapse;
@@ -172,22 +172,22 @@
         overflow: hidden;
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* 阴影效果 */
       }
-    
+
       .info-table td {
         padding: 10px;
         border-bottom: 1px solid #ccc;
       }
-    
+
       .info-table td:first-child {
         width: 30%;
         font-weight: bold;
       }
-    
+
       .button-container {
         display: flex;
         justify-content: center;
       }
-    
+
       .button-container button {
         padding: 10px 20px;
         margin: 0 10px;
@@ -198,7 +198,7 @@
         border-radius: 5px;
         cursor: pointer;
       }
-    
+
       .button-container button:hover {
         background-color: #0056b3;
       }
